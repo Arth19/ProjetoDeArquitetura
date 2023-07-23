@@ -8,9 +8,6 @@ main:
 
     jal strcpy                 # Chama a função strcpy
 
-    # Após a chamada da função strcpy, você pode inspecionar o conteúdo da string 
-    # destination para verificar se a cópia foi feita corretamente.
-
     # Código para terminar a execução
     li $v0, 10
     syscall
