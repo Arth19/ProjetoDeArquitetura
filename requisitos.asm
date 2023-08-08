@@ -13,13 +13,18 @@
     mesa_telefone: .space 15 # Telefone de contato
     mesa_pedidos: .space 12  # Registro de pedidos
     mesa_saldo: .space 60    # Reservando espaço para o saldo devedor de 15 mesas (4 bytes por mesa)
-    header: .asciiz "Relatório de Consumo - Mesa "  # Cabeçalho para o relatório de consumo
 
+    header: .asciiz "Relatório de Consumo - Mesa "  # Cabeçalho para o relatório de consumo
     msg_erro: .asciiz "Erro: A conta ainda tem um saldo pendente e não pode ser fechada.\n"
     
     # Dados de teste
     mesa_nome_teste: .asciiz "Joao"
     mesa_telefone_teste: .asciiz "123456789"
+
+    # Dados para leitura e escrita de arquivos
+    path: .asciiz "dados_restaurante.txt"
+    item_scan_format: .asciiz "Item %d: %s, Preço: $%d\n"
+    mesa_scan_format: .asciiz "Mesa %d: %s, Responsável: %s, Telefone: %s\n"
 
 .text
 main:
@@ -281,3 +286,76 @@ fechar_conta:
         jr $ra
 
 
+ler_dados:
+    # Abrir o arquivo para leitura
+    la $a0, path
+    li $a1, 0  # Flag de leitura
+    li $v0, 13
+    syscall
+
+    # Chamar as funções de leitura
+    jal ler_cardapio
+    jal ler_mesas
+
+    # Fechar o arquivo
+    li $v0, 16
+    syscall
+
+    jr $ra
+
+    ler_cardapio:
+        # Preparar para ler os itens do cardápio
+        la $a1, cardapio
+        li $a2, 240  # Tamanho do espaço reservado para o cardápio
+        li $v0, 14   # syscall para ler do arquivo
+        syscall
+
+        # Retornar
+        jr $ra
+
+    ler_mesas:
+        # Preparar para ler as mesas
+        la $a1, mesas
+        li $a2, 420  # Tamanho do espaço reservado para as mesas
+        li $v0, 14   # syscall para ler do arquivo
+        syscall
+
+        # Retornar
+        jr $ra
+
+escrever_dados:
+    # Abrir o arquivo para escrita
+    la $a0, path
+    li $a1, 1  # Flag de escrita
+    li $v0, 13
+    syscall
+
+    # Chamar as funções de escrita
+    jal escrever_cardapio
+    jal escrever_mesas
+
+    # Fechar o arquivo
+    li $v0, 16
+    syscall
+
+    jr $ra
+
+    escrever_cardapio:
+        # Preparar para escrever os itens do cardápio
+        la $a1, cardapio
+        li $a2, 240  # Tamanho do espaço reservado para o cardápio
+        li $v0, 15   # syscall para escrever no arquivo
+        syscall
+
+        # Retornar
+        jr $ra
+
+    escrever_mesas:
+        # Preparar para escrever as mesas
+        la $a1, mesas
+        li $a2, 420  # Tamanho do espaço reservado para as mesas
+        li $v0, 15   # syscall para escrever no arquivo
+        syscall
+
+        # Retornar
+        jr $ra
