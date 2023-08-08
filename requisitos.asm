@@ -25,6 +25,10 @@
     path: .asciiz "dados_restaurante.txt"
     item_scan_format: .asciiz "Item %d: %s, Preço: $%d\n"
     mesa_scan_format: .asciiz "Mesa %d: %s, Responsável: %s, Telefone: %s\n"
+    
+    # Dados do Terminal
+    banner: .asciiz "FakeNatty-shell>> "
+    user_input: .space 100
 
 .text
 main:
@@ -304,24 +308,24 @@ ler_dados:
     jr $ra
 
     ler_cardapio:
-        # Preparar para ler os itens do cardápio
-        la $a1, cardapio
-        li $a2, 240  # Tamanho do espaço reservado para o cardápio
-        li $v0, 14   # syscall para ler do arquivo
-        syscall
+            # Preparar para ler os itens do cardápio
+    la $a1, cardapio
+    li $a2, 240  # Tamanho do espaço reservado para o cardápio
+    li $v0, 14   # syscall para ler do arquivo
+    syscall
 
-        # Retornar
-        jr $ra
+    # Retornar
+    jr $ra
 
     ler_mesas:
-        # Preparar para ler as mesas
-        la $a1, mesas
-        li $a2, 420  # Tamanho do espaço reservado para as mesas
-        li $v0, 14   # syscall para ler do arquivo
-        syscall
+            # Preparar para ler as mesas
+    la $a1, mesas
+    li $a2, 420  # Tamanho do espaço reservado para as mesas
+    li $v0, 14   # syscall para ler do arquivo
+    syscall
 
-        # Retornar
-        jr $ra
+    # Retornar
+    jr $ra
 
 escrever_dados:
     # Abrir o arquivo para escrita
@@ -341,21 +345,39 @@ escrever_dados:
     jr $ra
 
     escrever_cardapio:
-        # Preparar para escrever os itens do cardápio
-        la $a1, cardapio
-        li $a2, 240  # Tamanho do espaço reservado para o cardápio
-        li $v0, 15   # syscall para escrever no arquivo
-        syscall
+            # Preparar para escrever os itens do cardápio
+    la $a1, cardapio
+    li $a2, 240  # Tamanho do espaço reservado para o cardápio
+    li $v0, 15   # syscall para escrever no arquivo
+    syscall
 
-        # Retornar
-        jr $ra
+    # Retornar
+    jr $ra
 
     escrever_mesas:
-        # Preparar para escrever as mesas
-        la $a1, mesas
-        li $a2, 420  # Tamanho do espaço reservado para as mesas
-        li $v0, 15   # syscall para escrever no arquivo
-        syscall
+    # Preparar para escrever as mesas
+    la $a1, mesas
+    li $a2, 420  # Tamanho do espaço reservado para as mesas
+    li $v0, 15   # syscall para escrever no arquivo
+    syscall
 
-        # Retornar
-        jr $ra
+    # Retornar
+    jr $ra
+    
+terminal_loop:
+    # Imprimir o banner do terminal
+    la $a0, banner
+    li $v0, 4
+    syscall
+
+    # Ler a entrada do usuário
+    li $v0, 8
+    la $a0, user_input
+    li $a1, 100
+    syscall
+
+    # Aqui, você pode adicionar lógica para interpretar o comando inserido pelo usuário
+    # e chamar as funções apropriadas com base na entrada.
+
+    # Por enquanto, vamos apenas retornar ao loop
+    j terminal_loop
