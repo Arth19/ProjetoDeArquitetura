@@ -6,6 +6,7 @@
     item_descricao: .asciiz "Pizza" # Descrição do item
 
     # Estrutura das mesas
+    .align 2 
     mesas: .space 420      # Reservando espaço para 15 mesas
     mesa_codigo: .word 0     # Código da mesa
     mesa_status: .word 0     # Status da mesa (0 para desocupada, 1 para ocupada)
@@ -29,6 +30,12 @@
     # Dados do Terminal
     banner: .asciiz "FakeNatty-shell>> "
     user_input: .space 100
+    
+    
+    msg_codigo_mesa_invalido: .asciiz "Erro: Código da mesa inválido.\n"
+    
+    # Para diagnóstico
+    msg_diagnostico: .asciiz "Valor de t1: "
 
 .text
 main:
@@ -133,6 +140,10 @@ adicionar_pedido:
     # $a1 = código do item pedido
     # $a2 = quantidade do item pedido
 
+    # Verificar se o código da mesa é válido
+    blt $a0, 1, codigo_mesa_invalido
+    bgt $a0, 15, codigo_mesa_invalido
+
     # Calculando o índice para localizar a mesa
     sub $a0, $a0, 1          # Subtrair 1 do código para obter o índice
     li $t0, 28              # Cada mesa tem 28 bytes
@@ -140,15 +151,29 @@ adicionar_pedido:
 
     # Localizando a área de pedidos da mesa
     addi $t1, $t1, 16       # Avançar 16 bytes (4 para código, 4 para status, 4 para nome, 4 para telefone)
+    li $t3, 0               # Inicializar contador de pedidos
 
     # Loop para verificar os pedidos existentes
     loop_pedidos:
+        # Verificar se todos os pedidos foram verificados
+        beq $t3, 3, fim  # Se já verificamos 3 pedidos, sair do loop
+       
+        # Diagnóstico: Imprimir o valor de $t1
+        la $a0, msg_diagnostico
+        li $v0, 4
+        syscall
+        move $a0, $t1
+        li $v0, 1
+        syscall
+        
         lw $t2, 0($t1)          # Carregar o código do item pedido
         beq $t2, $zero, novo_pedido # Se o espaço estiver vazio, adicionar um novo pedido
         beq $t2, $a1, atualizar_pedido # Se o item já foi pedido, atualizar a quantidade
-        addi $t1, $t1, 8        # Avançar para o próximo pedido
-        j loop_pedidos
 
+        addi $t1, $t1, 8        # Avançar para o próximo pedido
+        addi $t3, $t3, 1        # Incrementar contador de pedidos
+        j loop_pedidos
+        
     novo_pedido:
         # Adicionar um novo pedido
         sw $a1, 0($t1)          # Armazenar o código do item
@@ -161,6 +186,13 @@ adicionar_pedido:
         add $t3, $t3, $a2       # Adicionar a nova quantidade
         sw $t3, 4($t1)          # Armazenar a quantidade atualizada
 
+    codigo_mesa_invalido:
+        # Carregar e imprimir a mensagem de erro
+        la $a0, msg_codigo_mesa_invalido
+        li $v0, 4
+        syscall
+        jr $ra
+    
     fim:
         # Retornar
         jr $ra
@@ -308,24 +340,22 @@ ler_dados:
     jr $ra
 
     ler_cardapio:
-            # Preparar para ler os itens do cardápio
-    la $a1, cardapio
-    li $a2, 240  # Tamanho do espaço reservado para o cardápio
-    li $v0, 14   # syscall para ler do arquivo
-    syscall
-
-    # Retornar
-    jr $ra
+        # Preparar para ler os itens do cardápio
+        la $a1, cardapio
+        li $a2, 240  # Tamanho do espaço reservado para o cardápio
+        li $v0, 14   # syscall para ler do arquivo
+        syscall
+        # Retornar
+        jr $ra
 
     ler_mesas:
-            # Preparar para ler as mesas
-    la $a1, mesas
-    li $a2, 420  # Tamanho do espaço reservado para as mesas
-    li $v0, 14   # syscall para ler do arquivo
-    syscall
-
-    # Retornar
-    jr $ra
+        # Preparar para ler as mesas
+        la $a1, mesas
+        li $a2, 420  # Tamanho do espaço reservado para as mesas
+        li $v0, 14   # syscall para ler do arquivo
+        syscall
+        # Retornar
+        jr $ra
 
 escrever_dados:
     # Abrir o arquivo para escrita
@@ -375,9 +405,6 @@ terminal_loop:
     la $a0, user_input
     li $a1, 100
     syscall
-
-    # Aqui, você pode adicionar lógica para interpretar o comando inserido pelo usuário
-    # e chamar as funções apropriadas com base na entrada.
 
     # Por enquanto, vamos apenas retornar ao loop
     j terminal_loop
